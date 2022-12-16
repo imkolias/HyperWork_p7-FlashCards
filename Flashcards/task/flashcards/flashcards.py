@@ -3,7 +3,7 @@ import json
 import os
 import random
 import logging
-
+import argparse
 
 def cinput():
     temp_val = input()
@@ -17,11 +17,22 @@ def cprint(arg):
 
 
 class FlashCard:
+    need_to_save = 0
     cards_list = dict()
     wrong_list = dict()
 
     def __init__(self):
-        pass
+
+        parser = argparse.ArgumentParser("FlashGame")
+        parser.add_argument("--import_from")
+        parser.add_argument("--export_to")
+
+        self.arg_data = parser.parse_args()
+
+        if self.arg_data.import_from:
+            self.saveload("i", self.arg_data.import_from)
+        if self.arg_data.export_to:
+            self.need_to_save = 1
 
     def add_card(self):
 
@@ -76,16 +87,17 @@ class FlashCard:
             cprint("Correct!")
         elif u_answer in self.cards_list.values():
             wcardval = [i for i, v in self.cards_list.items() if v == u_answer]
-            cprint(f'Wrong. The right answer is "{right_answer}", but your definition is correct for "{wcardval}".')
+            cprint(f'Wrong. The right answer is "{right_answer}", but your definition is correct for "{wcardval[0]}".')
             self.add_wrong_answer(u_answer)
         else:
             cprint(f'Wrong. The right answer is "{right_answer}"')
             self.add_wrong_answer(question)
 
-    def saveload(self, action):
+    def saveload(self, action, file_name=""):
         if action == "i":
-            cprint("File name:")
-            file_name = cinput()
+            if file_name == "":
+                cprint("File name:")
+                file_name = cinput()
             if os.path.exists(file_name):
                 with open(file_name) as js_f:
                     self.cards_list = json.load(js_f)
@@ -94,8 +106,9 @@ class FlashCard:
                 cprint("File not found.")
 
         elif action == "e":
-            cprint("File name:")
-            file_name = cinput()
+            if file_name == "":
+                cprint("File name:")
+                file_name = cinput()
             with open(file_name, "w") as js_f:
                 json.dump(self.cards_list, js_f)
                 cprint(f"{len(self.cards_list)} cards have been saved")
@@ -121,6 +134,7 @@ class FlashCard:
                     cprint(f'The hardest cards are "{errdict[0][0]}", "{errdict[1][0]}"')
                 else:
                     cprint(f'The hardest card is "{errdict[0][0]}". You have {errdict[0][1]} errors answering it.')
+                    logging.debug(errdict, errdict[0][0], errdict[0][1])
 
     def reset_stats(self):
         self.wrong_list.clear()
@@ -158,6 +172,8 @@ class FlashCard:
                 self.logging_start()
 
             elif u_select == "exit":
+                if self.need_to_save == 1:
+                    self.saveload("e", self.arg_data.export_to)
                 cprint("bye bye")
                 exit()
 
@@ -166,6 +182,7 @@ logging.basicConfig(filename="temp.log",
                     filemode='a',
                     format='%(asctime)s | %(levelname)s: %(message)s',
                     level='DEBUG')
+
 
 first_game = FlashCard()
 first_game.show_menu()
