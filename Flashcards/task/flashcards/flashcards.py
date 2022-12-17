@@ -128,7 +128,7 @@ class FlashCard:
                 cprint(f'The hardest card is "{str(*self.wrong_list.keys())}". '
                        f'You have {str(*self.wrong_list.values())} errors answering it.')
             else:
-                errdict = sorted(self.wrong_list.items(), key=lambda x: x[1], reverse=True)
+                errdict = sorted(self.wrong_list.items(), key=lambda x: (x[1], x[0]), reverse=True)
 
                 if errdict[0][1] == errdict[1][1]:
                     cprint(f'The hardest cards are "{errdict[0][0]}", "{errdict[1][0]}"')
